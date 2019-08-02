@@ -16,7 +16,7 @@
         <item name="android:textColorPrimary">@color/ef_colorTextPrimary</item>
         <item name="actionMenuTextColor">@color/ef_colorTextPrimary</item>
         <item name="android:textSize">14sp</item>
-        <item name="android:fontFamily">@font/nanumbarungothic</item>
+        <item name="android:fontFamily">normal</item>
     </style>
 
 
