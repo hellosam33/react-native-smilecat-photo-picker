@@ -2,6 +2,7 @@ package com.esafirm.imagepicker.bridge;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import com.esafirm.imagepicker.features.ImagePicker;
@@ -9,6 +10,7 @@ import com.esafirm.imagepicker.model.Image;
 import com.facebook.react.bridge.BaseActivityEventListener;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.WritableMap;
 
 import java.util.List;
 
@@ -38,14 +40,11 @@ public class PhotoPickerEventListener extends BaseActivityEventListener {
             if (ImagePicker.shouldHandle(requestCode, resultCode, data)) {
                 final List<Image> images = ImagePicker.getImages(data);
 
-                Log.d("test", "selected Image count : " + images.size());
-
-                final MediaStoreImageAsyncTask mediaStoreImageAsyncTask = new MediaStoreImageAsyncTask(reactContext, photoPickerPromise);
+                final MediaStoreImageAsyncTask mediaStoreImageAsyncTask = new MediaStoreImageAsyncTask(photoPickerPromise);
                 mediaStoreImageAsyncTask.execute(images);
                 return;
             }
 
-            Log.d("test", "result is not ok. requestCode : " + resultCode);
             this.photoPickerPromise.reject(E_PICKER_CANCELLED, "photo picker canceled.");
         }
 
