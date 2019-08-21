@@ -7,12 +7,9 @@ declare module 'react-native-smilecat-photo-picker' {
 
     export interface PhotoPickerData {
         imageUri: string;
+        imageId: number;
         width: number;
         height: number;
-        thumbnailUri: string;
-        thumbnailWidth: number;
-        thumbnailHeight: number;
-        orientation: number; // ios only
     }
 
     export default class SmilecatPhotoPicker {
