@@ -1,44 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.esafirm.imagepicker.view.SquareFrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:padding="12dp"
+    >
 
     <ImageView
         android:id="@+id/image"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:layout_gravity="center"
         android:adjustViewBounds="true"
         android:background="@drawable/ef_folder_placeholder"
         android:contentDescription="@string/ef_content_desc_folder"
-        android:scaleType="centerCrop"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        />
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/tv_name"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:background="@color/ef_black_alpha_50"
-        android:orientation="vertical"
-        android:padding="@dimen/ef_padding_small">
+        android:ellipsize="end"
+        android:includeFontPadding="false"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="10dp"
+        android:textColor="@color/ef_colorPrimaryDark"
+        android:textSize="@dimen/ef_font_medium"
+        app:layout_constraintStart_toEndOf="@+id/image"
+        app:layout_constraintTop_toTopOf="@+id/image" />
 
-        <TextView
-            android:id="@+id/tv_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:includeFontPadding="false"
-            android:maxLines="3"
-            android:textColor="@color/ef_white"
-            android:textSize="@dimen/ef_font_small"/>
+    <TextView
+        android:id="@+id/tv_number"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:includeFontPadding="false"
+        android:textColor="@color/ef_grey"
+        android:textSize="@dimen/ef_font_medium"
+        app:layout_constraintStart_toEndOf="@+id/image"
+        app:layout_constraintTop_toBottomOf="@+id/tv_name"
 
-        <TextView
-            android:id="@+id/tv_number"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:includeFontPadding="false"
-            android:textColor="@color/ef_grey"
-            android:textSize="@dimen/ef_font_small"/>
-    </LinearLayout>
+        />
 
-</com.esafirm.imagepicker.view.SquareFrameLayout>
+    <ImageView
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="15dp"
+        android:src="@drawable/photo_group_choose"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/image"
+        android:contentDescription="image_group_select"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

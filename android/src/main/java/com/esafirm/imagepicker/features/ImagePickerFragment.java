@@ -16,7 +16,9 @@ import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.TranslateAnimation;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,8 +32,12 @@ import com.esafirm.imagepicker.helper.ConfigUtils;
 import com.esafirm.imagepicker.helper.ImagePickerPreferences;
 import com.esafirm.imagepicker.helper.IpCrasher;
 import com.esafirm.imagepicker.helper.IpLogger;
+import com.esafirm.imagepicker.listeners.OnFolderClickListener;
+import com.esafirm.imagepicker.listeners.OnImageClickListener;
+import com.esafirm.imagepicker.listeners.OnImageSelectedListener;
 import com.esafirm.imagepicker.model.Folder;
 import com.esafirm.imagepicker.model.Image;
+import com.esafirm.imagepicker.model.ImageGroup;
 import com.esafirm.imagepicker.view.SnackBarView;
 
 import java.util.ArrayList;
@@ -75,7 +81,10 @@ public class ImagePickerFragment extends Fragment implements ImagePickerView {
     private Handler handler;
     private ContentObserver observer;
 
+    private List<Image> currentFolderImages = new ArrayList<>();
     private boolean isCameraOnly;
+    private boolean isFolderMode = false;
+    private boolean folderMode;
 
 
     public ImagePickerFragment() {
@@ -136,6 +145,7 @@ public class ImagePickerFragment extends Fragment implements ImagePickerView {
             interactionListener.selectionChanged(recyclerViewManager.getSelectedImages());
             return result;
         }
+
         return null;
     }
 
@@ -182,23 +192,34 @@ public class ImagePickerFragment extends Fragment implements ImagePickerView {
     }
 
     private void setupRecyclerView(ImagePickerConfig config, ArrayList<Image> selectedImages) {
+        recyclerView.setNestedScrollingEnabled(false);
         recyclerViewManager = new RecyclerViewManager(
                 recyclerView,
                 config,
                 getResources().getConfiguration().orientation
         );
 
-        recyclerViewManager.setupAdapters(selectedImages, (isSelected) -> recyclerViewManager.selectImage(isSelected)
-                , bucket -> setImageAdapter(bucket.getImages()));
-
-        recyclerViewManager.setImageSelectedListener(selectedImage -> {
+        final OnImageSelectedListener onImageSelectedListener = selectedImage -> {
             updateTitle();
             interactionListener.selectionChanged(recyclerViewManager.getSelectedImages());
             if (ConfigUtils.shouldReturn(config, false) && !selectedImage.isEmpty()) {
                 onDone();
             }
-        });
+        };
+        final OnImageClickListener onImageClickListener = isSelected -> recyclerViewManager.selectImage(isSelected);
+        final OnFolderClickListener onFolderClickListener = bucket -> {
+            this.currentFolderImages = bucket.getImages();
+            this.folderMode = false;
+            interactionListener.setTitle(bucket.getFolderName());
+            setImageAdapter(bucket.getImages());
+        };
 
+        recyclerViewManager.setupAdapters(
+                selectedImages,
+                onImageClickListener,
+                onFolderClickListener,
+                onImageSelectedListener
+        );
     }
 
     private void setupComponents() {
@@ -234,17 +255,39 @@ public class ImagePickerFragment extends Fragment implements ImagePickerView {
      * 3. Update title
      */
     void setImageAdapter(List<Image> images) {
-        recyclerViewManager.setImageAdapter(images);
+        final List<ImageGroup> imageGroups = ImageGroup.Util.organizeImages(images);
+        animateLayout(false);
+        recyclerViewManager.setImageAdapter(imageGroups);
         updateTitle();
     }
 
     void setFolderAdapter(List<Folder> folders) {
+        animateLayout(true);
         recyclerViewManager.setFolderAdapter(folders);
         updateTitle();
     }
 
+    List<Image> getCurrentFolderImages() {
+        return this.currentFolderImages;
+    }
+
+    private void animateLayout(boolean dropDown) {
+        final RelativeLayout layout = (RelativeLayout) recyclerView.getParent();
+
+        final int fromYDelta = dropDown ? layout.getHeight() : -(layout.getHeight());
+        TranslateAnimation animate = new TranslateAnimation(
+                0,                 // fromXDelta
+                0,                 // toXDelta
+                fromYDelta,  // fromYDelta
+                0);                // toYDelta
+        animate.setDuration(200);
+        animate.setFillAfter(true);
+
+        layout.startAnimation(animate);
+    }
+
     private void updateTitle() {
-        interactionListener.setTitle(recyclerViewManager.getTitle());
+        interactionListener.setPhotoCount(recyclerViewManager.getTitle());
     }
 
     /**
@@ -252,6 +295,11 @@ public class ImagePickerFragment extends Fragment implements ImagePickerView {
      * Get all selected images then return image to caller activity
      */
     public void onDone() {
+        final int limit = config.getLimit();
+        if (recyclerViewManager.getSelectedImages().size() > limit) {
+            Toast.makeText(getContext(), "한번에 " + limit + " 장이 넘는 이미지는 선택 할 수 없습니다.", Toast.LENGTH_SHORT).show();
+            return;
+        }
         presenter.onDoneSelectImages(getContext(), recyclerViewManager.getSelectedImages());
     }
 
@@ -263,7 +311,7 @@ public class ImagePickerFragment extends Fragment implements ImagePickerView {
         super.onConfigurationChanged(newConfig);
         if (recyclerViewManager != null) {
             // recyclerViewManager can be null here if we use cameraOnly mode
-            recyclerViewManager.changeOrientation(newConfig.orientation);
+            recyclerViewManager.init();
         }
     }
 
@@ -533,12 +581,18 @@ public class ImagePickerFragment extends Fragment implements ImagePickerView {
 
     @Override
     public void showFetchCompleted(List<Image> images, List<Folder> folders) {
+        this.currentFolderImages = images;
         ImagePickerConfig config = getImagePickerConfig();
-        if (config != null && config.isFolderMode()) {
-            setFolderAdapter(folders);
-        } else {
-            setImageAdapter(images);
+        if (config != null) {
+            setAdapters(images, folders);
         }
+    }
+
+    private void setAdapters(List<Image> images, List<Folder> folders) {
+        recyclerViewManager.setFolderAdapter(folders);
+        final List<ImageGroup> imageGroups = ImageGroup.Util.organizeImages(images);
+        recyclerViewManager.setImageAdapter(imageGroups);
+        updateTitle();
     }
 
     @Override
@@ -562,5 +616,17 @@ public class ImagePickerFragment extends Fragment implements ImagePickerView {
         progressBar.setVisibility(View.GONE);
         recyclerView.setVisibility(View.GONE);
         emptyTextView.setVisibility(View.VISIBLE);
+    }
+
+    public boolean isFolderMode() {
+        return folderMode;
+    }
+
+    public void setFolderMode(boolean folderMode) {
+        this.folderMode = folderMode;
+    }
+
+    public void toggleMode() {
+        this.folderMode = !folderMode;
     }
 }

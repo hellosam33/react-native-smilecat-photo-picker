@@ -6,7 +6,7 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="ef_AppTheme" parent="ef_BaseTheme">f
+    <style name="ef_AppTheme" parent="ef_BaseTheme">
         <item name="colorPrimary">@color/ef_colorPrimary</item>
         <item name="colorPrimaryDark">@color/ef_colorPrimaryDark</item>
         <item name="colorAccent">@color/ef_colorAccent</item>
@@ -18,4 +18,6 @@
         <item name="android:textSize">14sp</item>
         <item name="android:fontFamily">normal</item>
     </style>
+
+
 </resources>

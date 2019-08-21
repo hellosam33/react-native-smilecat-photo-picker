@@ -2,17 +2,19 @@ package com.esafirm.imagepicker.adapter;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.esafirm.imagepicker.R;
 import com.esafirm.imagepicker.features.imageloader.ImageLoader;
 import com.esafirm.imagepicker.features.imageloader.ImageType;
-import com.esafirm.imagepicker.helper.ImagePickerUtils;
 import com.esafirm.imagepicker.listeners.OnImageClickListener;
 import com.esafirm.imagepicker.listeners.OnImageSelectedListener;
 import com.esafirm.imagepicker.model.Image;
@@ -20,37 +22,34 @@ import com.esafirm.imagepicker.model.Image;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.RecyclerView;
 
-public class ImagePickerAdapter extends BaseListAdapter<ImagePickerAdapter.ImageViewHolder> {
+public class ImageAdapter extends BaseListAdapter<ImageAdapter.ImageViewHolder> {
 
     private List<Image> images = new ArrayList<>();
-    private List<Image> selectedImages = new ArrayList<>();
-
-    private OnImageClickListener itemClickListener;
+    private List<Image> selectedImages;
+    private final OnImageClickListener itemClickListener;
     private OnImageSelectedListener imageSelectedListener;
 
-    public ImagePickerAdapter(Context context, ImageLoader imageLoader,
-                              List<Image> selectedImages, OnImageClickListener itemClickListener) {
+
+    public ImageAdapter(Context context, ImageLoader imageLoader, List<Image> selectedImages, OnImageClickListener itemClickListener) {
         super(context, imageLoader);
+        this.selectedImages = selectedImages;
         this.itemClickListener = itemClickListener;
+    }
 
-        if (selectedImages != null && !selectedImages.isEmpty()) {
-            this.selectedImages.addAll(selectedImages);
-        }
+    public void setData(final List<Image> images) {
+        this.images = images;
+    }
+
+    @NonNull
+    @Override
+    public ImageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        final View imageView = getInflater().inflate(R.layout.ef_imagepicker_item_image, parent, false);
+        return new ImageViewHolder(imageView);
     }
 
     @Override
-    public ImageViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new ImageViewHolder(
-                getInflater().inflate(R.layout.ef_imagepicker_item_image, parent, false)
-        );
-    }
-
-    @Override
-    public void onBindViewHolder(ImageViewHolder viewHolder, int position) {
-
+    public void onBindViewHolder(@NonNull ImageViewHolder viewHolder, int position) {
         final Image image = images.get(position);
         final boolean isSelected = isSelected(image);
 
@@ -60,24 +59,8 @@ public class ImagePickerAdapter extends BaseListAdapter<ImagePickerAdapter.Image
                 ImageType.GALLERY
         );
 
-        boolean showFileTypeIndicator = false;
-        String fileTypeLabel = "";
-        if(ImagePickerUtils.isGifFormat(image)) {
-            fileTypeLabel = getContext().getResources().getString(R.string.ef_gif);
-            showFileTypeIndicator = true;
-        }
-        if(ImagePickerUtils.isVideoFormat(image)) {
-            fileTypeLabel = getContext().getResources().getString(R.string.ef_video);
-            showFileTypeIndicator = true;
-        }
-        viewHolder.fileTypeIndicator.setText(fileTypeLabel);
-        viewHolder.fileTypeIndicator.setVisibility(showFileTypeIndicator
-                ? View.VISIBLE
-                : View.GONE);
-
-        viewHolder.alphaView.setAlpha(isSelected
-                ? 0.5f
-                : 0f);
+        viewHolder.fileTypeIndicator.setVisibility(View.GONE);
+        viewHolder.alphaView.setAlpha(isSelected ? 0.5f : 0f);
 
         viewHolder.itemView.setOnClickListener(v -> {
             boolean shouldSelect = itemClickListener.onImageClick(
@@ -94,15 +77,11 @@ public class ImagePickerAdapter extends BaseListAdapter<ImagePickerAdapter.Image
 
         final Drawable selectIcon = ContextCompat.getDrawable(getContext(), isSelected ? R.drawable.photo_checked : R.drawable.photo_unchecked);
         viewHolder.imageSelectIcon.setImageDrawable(selectIcon);
-//        viewHolder.container.setForeground(isSelected
-//                ? drawable
-//                : ContextCompat.getDrawable(getContext(), R.drawable.photo_unchecked)
-//                );
     }
 
-    private boolean isSelected(Image image) {
-        for (Image selectedImage : selectedImages) {
-            if (selectedImage.getPath().equals(image.getPath())) {
+    private boolean isSelected(final Image image) {
+        for (final Image selectedImage : selectedImages) {
+            if (selectedImage.getId() == image.getId()) {
                 return true;
             }
         }
@@ -111,14 +90,13 @@ public class ImagePickerAdapter extends BaseListAdapter<ImagePickerAdapter.Image
 
     @Override
     public int getItemCount() {
-        return images.size();
+        return this.images.size();
     }
 
-
-    public void setData(List<Image> images) {
-        this.images.clear();
-        this.images.addAll(images);
+    public void setImageSelectedListener(OnImageSelectedListener imageSelectedListener) {
+        this.imageSelectedListener = imageSelectedListener;
     }
+
 
     private void addSelected(final Image image, final int position) {
         mutateSelection(() -> {
@@ -134,31 +112,25 @@ public class ImagePickerAdapter extends BaseListAdapter<ImagePickerAdapter.Image
         });
     }
 
-    public void removeAllSelectedSingleClick() {
-        mutateSelection(() -> {
-            selectedImages.clear();
-            notifyDataSetChanged();
-        });
-    }
-
     private void mutateSelection(Runnable runnable) {
         runnable.run();
         if (imageSelectedListener != null) {
-            imageSelectedListener.onSelectionUpdate(selectedImages);
+            imageSelectedListener.onSelectionUpdate(getSelectedItems());
         }
     }
 
-    public void setImageSelectedListener(OnImageSelectedListener imageSelectedListener) {
-        this.imageSelectedListener = imageSelectedListener;
+
+    private List<Image> getSelectedItems() {
+        final List<Image> selectedItems = new ArrayList<>();
+
+        for (final Image image : images) {
+            if (isSelected(image)) {
+                selectedItems.add(image);
+            }
+        }
+        return selectedItems;
     }
 
-    public Image getItem(int position) {
-        return images.get(position);
-    }
-
-    public List<Image> getSelectedImages() {
-        return selectedImages;
-    }
 
     static class ImageViewHolder extends RecyclerView.ViewHolder {
 
@@ -178,5 +150,4 @@ public class ImagePickerAdapter extends BaseListAdapter<ImagePickerAdapter.Image
             fileTypeIndicator = itemView.findViewById(R.id.ef_item_file_type_indicator);
         }
     }
-
 }

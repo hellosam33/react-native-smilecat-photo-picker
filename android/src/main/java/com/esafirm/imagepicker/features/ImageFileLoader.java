@@ -2,7 +2,10 @@ package com.esafirm.imagepicker.features;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.media.MediaTimestamp;
 import android.provider.MediaStore;
+import android.util.Log;
+
 import androidx.annotation.Nullable;
 
 import com.esafirm.imagepicker.features.common.ImageLoaderListener;
@@ -11,7 +14,11 @@ import com.esafirm.imagepicker.model.Folder;
 import com.esafirm.imagepicker.model.Image;
 
 import java.io.File;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.time.DateTimeException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +38,8 @@ public class ImageFileLoader {
             MediaStore.Images.Media._ID,
             MediaStore.Images.Media.DISPLAY_NAME,
             MediaStore.Images.Media.DATA,
-            MediaStore.Images.Media.BUCKET_DISPLAY_NAME
+            MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
+            MediaStore.Images.Media.DATE_TAKEN
     };
 
     public void loadDeviceImages(final boolean isFolderMode, final boolean includeVideo, final boolean includeAnimation, final ArrayList<File> excludedImages, final ImageLoaderListener listener) {
@@ -101,13 +109,15 @@ public class ImageFileLoader {
                     String name = cursor.getString(cursor.getColumnIndex(projection[1]));
                     String path = cursor.getString(cursor.getColumnIndex(projection[2]));
                     String bucket = cursor.getString(cursor.getColumnIndex(projection[3]));
+//                    long dateAdded = cursor.getLong(cursor.getColumnIndex(projection[4])) * 1000L;
+                    long dateAdded = cursor.getLong(cursor.getColumnIndex(projection[4]));
 
                     File file = makeSafeFile(path);
                     if (file != null) {
                         if (exlucedImages != null && exlucedImages.contains(file))
                             continue;
 
-                        Image image = new Image(id, name, path);
+                        Image image = new Image(id, name, path, dateAdded);
 
                         if (!includeAnimation) {
                             if (ImagePickerUtils.isGifFormat(image))

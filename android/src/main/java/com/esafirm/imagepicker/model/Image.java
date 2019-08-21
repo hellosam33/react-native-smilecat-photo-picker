@@ -8,11 +8,13 @@ public class Image implements Parcelable {
     private long id;
     private String name;
     private String path;
+    private long dateAdded;
 
-    public Image(long id, String name, String path) {
+    public Image(long id, String name, String path, long dateAdded) {
         this.id = id;
         this.name = name;
         this.path = path;
+        this.dateAdded = dateAdded;
     }
 
     public long getId() {
@@ -39,6 +41,10 @@ public class Image implements Parcelable {
         this.path = path;
     }
 
+    public long getDateAdded() {
+        return this.dateAdded;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -62,12 +68,14 @@ public class Image implements Parcelable {
         dest.writeLong(this.id);
         dest.writeString(this.name);
         dest.writeString(this.path);
+        dest.writeLong(this.dateAdded);
     }
 
     protected Image(Parcel in) {
         this.id = in.readLong();
         this.name = in.readString();
         this.path = in.readString();
+        this.dateAdded = in.readLong();
     }
 
     public static final Creator<Image> CREATOR = new Creator<Image>() {

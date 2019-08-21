@@ -43,8 +43,8 @@ public class FolderPickerAdapter extends BaseListAdapter<FolderPickerAdapter.Fol
                 ImageType.FOLDER
         );
 
-        holder.name.setText(folders.get(position).getFolderName());
-        holder.number.setText(String.valueOf(folders.get(position).getImages().size()));
+        holder.name.setText(folder.getFolderName());
+        holder.number.setText(String.valueOf(folder.getImages().size()));
 
         holder.itemView.setOnClickListener(v -> {
             if (folderClickListener != null)

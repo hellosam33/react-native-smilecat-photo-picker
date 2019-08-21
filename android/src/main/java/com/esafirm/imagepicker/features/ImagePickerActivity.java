@@ -11,6 +11,11 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.FragmentTransaction;
+
 import com.esafirm.imagepicker.R;
 import com.esafirm.imagepicker.features.cameraonly.CameraOnlyConfig;
 import com.esafirm.imagepicker.helper.ConfigUtils;
@@ -22,17 +27,13 @@ import com.esafirm.imagepicker.model.Image;
 
 import java.util.List;
 
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.FragmentTransaction;
-
 public class ImagePickerActivity extends AppCompatActivity implements ImagePickerInteractionListener, ImagePickerView {
 
     private ActionBar actionBar;
     private ImagePickerFragment imagePickerFragment;
 
     private ImagePickerConfig config;
+
 
     @Override
     protected void attachBaseContext(Context newBase) {
@@ -65,6 +66,25 @@ public class ImagePickerActivity extends AppCompatActivity implements ImagePicke
         } else {
             setContentView(createCameraLayout());
         }
+
+        // select album
+        final TextView selectButton = findViewById(R.id.toolbar_select_album);
+        selectButton.setOnClickListener(e -> {
+            imagePickerFragment.toggleMode();
+            final boolean isFolderMode = imagePickerFragment.isFolderMode();
+
+            if (isFolderMode) {
+                imagePickerFragment.setFolderAdapter(null);
+            } else {
+                final List<Image> currentFolderImages = imagePickerFragment.getCurrentFolderImages();
+                if (!currentFolderImages.isEmpty()) {
+                    imagePickerFragment.setImageAdapter(currentFolderImages);
+                }
+            }
+
+            final Drawable dropDownImage = getResources().getDrawable(isFolderMode ? R.drawable.dropdown_up : R.drawable.dropdown_down);
+            selectButton.setCompoundDrawablesWithIntrinsicBounds(null, null, dropDownImage, null);
+        });
 
         if (savedInstanceState != null) {
             // The fragment has been restored.
@@ -104,7 +124,6 @@ public class ImagePickerActivity extends AppCompatActivity implements ImagePicke
         MenuItem menuDone = menu.findItem(R.id.menu_done);
         if (menuDone != null) {
             menuDone.setTitle(ConfigUtils.getDoneButtonText(this, config));
-//            menuDone.setVisible(imagePickerFragment.isShowDoneButton());
             menuDone.setVisible(true); // always show done button
         }
         return super.onPrepareOptionsMenu(menu);
@@ -132,13 +151,6 @@ public class ImagePickerActivity extends AppCompatActivity implements ImagePicke
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onBackPressed() {
-        if (!imagePickerFragment.handleBack()) {
-            super.onBackPressed();
-        }
-    }
-
     private void setupView() {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -162,7 +174,17 @@ public class ImagePickerActivity extends AppCompatActivity implements ImagePicke
 
     @Override
     public void setTitle(String title) {
-        actionBar.setTitle(title);
+        final TextView titleTextView = findViewById(R.id.toolbar_select_album);
+        titleTextView.setVisibility(View.VISIBLE);
+        if (title != null && !title.isEmpty()) {
+            titleTextView.setText(title);
+        }
+        final Drawable dropDownImage = getResources().getDrawable(R.drawable.dropdown_down);
+        titleTextView.setCompoundDrawablesWithIntrinsicBounds(null, null, dropDownImage, null);
+    }
+
+    @Override
+    public void setPhotoCount(String title) {
         supportInvalidateOptionsMenu();
         final TextView photoCount = findViewById(R.id.toolbar_photo_count);
         photoCount.setText(title);
