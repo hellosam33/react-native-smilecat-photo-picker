@@ -1,11 +1,12 @@
 package com.esafirm.imagepicker.adapter;
 
 import android.content.Context;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.esafirm.imagepicker.R;
 import com.esafirm.imagepicker.features.imageloader.ImageLoader;
@@ -44,7 +45,7 @@ public class FolderPickerAdapter extends BaseListAdapter<FolderPickerAdapter.Fol
         );
 
         holder.name.setText(folder.getFolderName());
-        holder.number.setText(String.valueOf(folder.getImages().size()));
+        holder.number.setText(String.format(getContext().getString(R.string.ef_selected), folder.getImages().size()));
 
         holder.itemView.setOnClickListener(v -> {
             if (folderClickListener != null)

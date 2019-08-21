@@ -151,6 +151,13 @@ public class ImagePickerActivity extends AppCompatActivity implements ImagePicke
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onBackPressed() {
+        if (!imagePickerFragment.handleBack()) {
+            super.onBackPressed();
+        }
+    }
+
     private void setupView() {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);

@@ -95,7 +95,7 @@ public class RecyclerViewManager {
 
     // Returns true if a back action was handled by going back a folder; false otherwise.
     public boolean handleBack() {
-        if (config.isFolderMode() && !isDisplayingFolderView()) {
+        if (!isDisplayingFolderView()) {
             setFolderAdapter(null);
             return true;
         }

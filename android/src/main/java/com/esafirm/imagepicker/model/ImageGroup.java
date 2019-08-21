@@ -98,7 +98,7 @@ public class ImageGroup implements Parcelable {
 
     public static class Util {
 
-        private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("MM월 dd일 E요일", Locale.KOREA);
+        private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("M월 dd일 E요일", Locale.KOREA);
         private static final long EXCLUSION = 24 * 60 * 60 * 1000L;
 
         public static List<ImageGroup> organizeImages(final List<Image> images) {

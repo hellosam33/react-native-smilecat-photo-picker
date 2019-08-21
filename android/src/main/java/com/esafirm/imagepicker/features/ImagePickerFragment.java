@@ -535,16 +535,11 @@ public class ImagePickerFragment extends Fragment implements ImagePickerView {
     // it.
     // This Fragment might handle a "back" event by, for example, going back to the list of folders.
     // Or it might have no "back" to go, and return false.
-    public boolean handleBack() {
-        if (isCameraOnly) {
-            return false;
-        }
-        if (recyclerViewManager.handleBack()) {
-            // Handled.
-            updateTitle();
-            return true;
-        }
-        return false;
+
+
+    boolean handleBack() {
+        // Handled.
+        return recyclerViewManager.handleBack();
     }
 
     public boolean isShowDoneButton() {
