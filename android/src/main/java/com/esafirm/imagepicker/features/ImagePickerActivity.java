@@ -2,13 +2,18 @@ package com.esafirm.imagepicker.features;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.provider.SyncStateContract;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.ActionBar;
@@ -16,8 +21,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.bumptech.glide.Glide;
 import com.esafirm.imagepicker.R;
 import com.esafirm.imagepicker.features.cameraonly.CameraOnlyConfig;
+import com.esafirm.imagepicker.features.common.Constants;
 import com.esafirm.imagepicker.helper.ConfigUtils;
 import com.esafirm.imagepicker.helper.IpLogger;
 import com.esafirm.imagepicker.helper.LocaleManager;
@@ -95,6 +102,28 @@ public class ImagePickerActivity extends AppCompatActivity implements ImagePicke
             ft.replace(R.id.ef_imagepicker_fragment_placeholder, imagePickerFragment);
             ft.commit();
         }
+
+        showImagePickerTutorial();
+    }
+
+    private void showImagePickerTutorial() {
+        final View tutorialView = findViewById(R.id.tutorialView);
+
+        final int tutorialCloseCount = PreferenceManager.getDefaultSharedPreferences(ImagePickerActivity.this).getInt(Constants.IMAGE_PICKER_MAIN_GUIDE.getKey(), 0);
+        final boolean tutorialShown = tutorialCloseCount >= 2;
+
+        if (!tutorialShown) {
+            final ImageView guideGif = findViewById(R.id.guide_gif_image);
+            Glide.with(tutorialView).asGif().load(R.drawable.guide_photoselect).into(guideGif);
+            tutorialView.setVisibility(View.VISIBLE);
+            tutorialView.setOnClickListener(v -> {
+                v.setVisibility(View.INVISIBLE);
+                PreferenceManager.getDefaultSharedPreferences(ImagePickerActivity.this).edit().putInt(Constants.IMAGE_PICKER_MAIN_GUIDE.getKey(), tutorialCloseCount + 1).apply();
+            });
+        } else {
+            tutorialView.setVisibility(View.GONE);
+        }
+
     }
 
     private FrameLayout createCameraLayout() {
@@ -246,4 +275,12 @@ public class ImagePickerActivity extends AppCompatActivity implements ImagePicke
     public void finishPickImages(List<Image> images) {
         imagePickerFragment.finishPickImages(images);
     }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        imagePickerFragment.onTouchEvent(ev);
+        return super.dispatchTouchEvent(ev);
+    }
+
+
 }

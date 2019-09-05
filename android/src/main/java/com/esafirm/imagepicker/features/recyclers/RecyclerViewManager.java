@@ -18,6 +18,7 @@ import com.esafirm.imagepicker.features.ReturnMode;
 import com.esafirm.imagepicker.features.imageloader.ImageLoader;
 import com.esafirm.imagepicker.helper.ConfigUtils;
 import com.esafirm.imagepicker.helper.ImagePickerUtils;
+import com.esafirm.imagepicker.helper.imagegroup.ImageGroupLevel;
 import com.esafirm.imagepicker.listeners.OnFolderClickListener;
 import com.esafirm.imagepicker.listeners.OnImageClickListener;
 import com.esafirm.imagepicker.listeners.OnImageSelectedListener;
@@ -33,19 +34,22 @@ import static com.esafirm.imagepicker.features.IpCons.MODE_SINGLE;
 public class RecyclerViewManager {
 
     private final Context context;
+    private Parcelable state;
     private final RecyclerView recyclerView;
     private final ImagePickerConfig config;
 
     private LinearLayoutManager layoutManager;
 
-    private ImageGroupAdapter imageAdapter;
+    private ImageGroupAdapter imageGroupAdapter;
     private FolderPickerAdapter folderAdapter;
 
     private Parcelable foldersState;
 
     private final ImageGroupDividerItemDecoration imageGroupDividerItemDecoration;
+    private boolean isScrollEnabled = true;
+    private ImageGroupLevel imageGroupLevel = ImageGroupLevel.DAY;
 
-    public RecyclerViewManager(RecyclerView recyclerView, ImagePickerConfig config, int orientation) {
+    public RecyclerViewManager(RecyclerView recyclerView, ImagePickerConfig config) {
         this.recyclerView = recyclerView;
         this.config = config;
         this.context = recyclerView.getContext();
@@ -65,6 +69,24 @@ public class RecyclerViewManager {
         // prevent auto scroll to recycler view..
         layoutManager = new LinearLayoutManager(context) {
             @Override
+            public Parcelable onSaveInstanceState() {
+                return super.onSaveInstanceState();
+            }
+
+
+
+            @Override
+            public void onRestoreInstanceState(Parcelable state) {
+                super.onRestoreInstanceState(state);
+
+            }
+
+            @Override
+            public boolean canScrollVertically() {
+                return isScrollEnabled && super.canScrollVertically();
+            }
+
+            @Override
             public boolean requestChildRectangleOnScreen(@NonNull RecyclerView parent, @NonNull View child, @NonNull Rect rect, boolean immediate) {
                 return false;
             }
@@ -76,13 +98,17 @@ public class RecyclerViewManager {
         recyclerView.setLayoutManager(layoutManager);
     }
 
+    public LinearLayoutManager getLayoutManager() {
+        return layoutManager;
+    }
+
     public void setupAdapters(ArrayList<Image> selectedImages, OnImageClickListener onImageClickListener, OnFolderClickListener onFolderClickListener, OnImageSelectedListener onImageSelectedListener) {
         if (config.getMode() == MODE_SINGLE && selectedImages != null && selectedImages.size() > 1) {
             selectedImages = null;
         }
         /* Init folder and image adapter */
         final ImageLoader imageLoader = config.getImageLoader();
-        imageAdapter = new ImageGroupAdapter(context, imageLoader, selectedImages, onImageClickListener, onImageSelectedListener);
+        imageGroupAdapter = new ImageGroupAdapter(context, imageLoader, selectedImages, onImageClickListener, onImageSelectedListener);
 
 
         final OnFolderClickListener folderClickListener = bucket -> {
@@ -111,7 +137,7 @@ public class RecyclerViewManager {
             return ConfigUtils.getImageTitle(context, config);
         }
 
-        final int imageSize = imageAdapter.getSelectedImages().size();
+        final int imageSize = imageGroupAdapter.getSelectedImages().size();
 
         final boolean useDefaultTitle = !ImagePickerUtils.isStringEmpty(config.getImageTitle()) && imageSize == 0;
 
@@ -126,10 +152,16 @@ public class RecyclerViewManager {
         return String.format(context.getString(R.string.ef_selected), imageSize);
     }
 
-    public void setImageAdapter(List<ImageGroup> imageGroups) {
-        imageAdapter.setData(imageGroups);
+    public void setImageGroupAdapter(List<ImageGroup> imageGroups) {
+        imageGroupAdapter.setData(imageGroups);
         recyclerView.removeItemDecoration(imageGroupDividerItemDecoration);
-        recyclerView.setAdapter(imageAdapter);
+        recyclerView.setAdapter(imageGroupAdapter);
+    }
+
+    public void setImageAdapterData(List<ImageGroup> imageGroups, ImageGroupLevel imageGroupLevel) {
+        imageGroupAdapter.setGroupLevel(imageGroupLevel);
+        imageGroupAdapter.updateGroups(imageGroups);
+        recyclerView.removeItemDecoration(imageGroupDividerItemDecoration);
     }
 
     public void setFolderAdapter(List<Folder> folders) {
@@ -142,23 +174,30 @@ public class RecyclerViewManager {
         }
     }
 
+    public void setImageGroupLevel(ImageGroupLevel imageGroupLevel) {
+        this.imageGroupLevel = imageGroupLevel;
+    }
+
+    public ImageGroupLevel getImageGroupLevel() {
+        return imageGroupLevel;
+    }
     /* --------------------------------------------------- */
     /* > Images */
     /* --------------------------------------------------- */
 
     private void checkAdapterIsInitialized() {
-        if (imageAdapter == null) {
+        if (imageGroupAdapter == null) {
             throw new IllegalStateException("Must call setupAdapters first!");
         }
     }
 
     public List<Image> getSelectedImages() {
         checkAdapterIsInitialized();
-        return imageAdapter.getSelectedImages();
+        return imageGroupAdapter.getSelectedImages();
     }
 
     public boolean selectImage(boolean isSelected) {
-        if (imageAdapter.getSelectedImages().size() >= config.getLimit() && !isSelected) {
+        if (imageGroupAdapter.getSelectedImages().size() >= config.getLimit() && !isSelected) {
             Toast.makeText(context, R.string.ef_msg_limit_images, Toast.LENGTH_SHORT).show();
             return false;
         }
@@ -167,8 +206,11 @@ public class RecyclerViewManager {
 
     public boolean isShowDoneButton() {
         return !isDisplayingFolderView()
-                && !imageAdapter.getSelectedImages().isEmpty()
+                && !imageGroupAdapter.getSelectedImages().isEmpty()
                 && (config.getReturnMode() != ReturnMode.ALL && config.getReturnMode() != ReturnMode.GALLERY_ONLY);
     }
 
+    public void setScrollEnabled(boolean scrollEnabled) {
+        isScrollEnabled = scrollEnabled;
+    }
 }

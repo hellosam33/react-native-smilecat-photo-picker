@@ -109,7 +109,6 @@ public class ImageFileLoader {
                     String name = cursor.getString(cursor.getColumnIndex(projection[1]));
                     String path = cursor.getString(cursor.getColumnIndex(projection[2]));
                     String bucket = cursor.getString(cursor.getColumnIndex(projection[3]));
-//                    long dateAdded = cursor.getLong(cursor.getColumnIndex(projection[4])) * 1000L;
                     long dateAdded = cursor.getLong(cursor.getColumnIndex(projection[4]));
 
                     File file = makeSafeFile(path);
@@ -119,10 +118,8 @@ public class ImageFileLoader {
 
                         Image image = new Image(id, name, path, dateAdded);
 
-                        if (!includeAnimation) {
-                            if (ImagePickerUtils.isGifFormat(image))
-                                continue;
-                        }
+                        if (ImagePickerUtils.isGifFormat(image))
+                            continue;
 
                         temp.add(image);
 

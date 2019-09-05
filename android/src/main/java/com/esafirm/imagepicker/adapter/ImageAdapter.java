@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.esafirm.imagepicker.R;
@@ -18,6 +19,7 @@ import com.esafirm.imagepicker.features.imageloader.ImageType;
 import com.esafirm.imagepicker.listeners.OnImageClickListener;
 import com.esafirm.imagepicker.listeners.OnImageSelectedListener;
 import com.esafirm.imagepicker.model.Image;
+import com.esafirm.imagepicker.model.ImageGroup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -131,6 +133,13 @@ public class ImageAdapter extends BaseListAdapter<ImageAdapter.ImageViewHolder> 
         return selectedItems;
     }
 
+    public void updateImages(List<Image> newImages) {
+        final ImageDiffCallback imageDiffCallback = new ImageDiffCallback(this.images, newImages);
+        final DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(imageDiffCallback);
+        this.images.clear();
+        this.images.addAll(newImages);
+        diffResult.dispatchUpdatesTo(this);
+    }
 
     static class ImageViewHolder extends RecyclerView.ViewHolder {
 

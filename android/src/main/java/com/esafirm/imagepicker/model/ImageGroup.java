@@ -2,42 +2,51 @@ package com.esafirm.imagepicker.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Log;
 
-import java.lang.reflect.Array;
-import java.text.SimpleDateFormat;
+import androidx.annotation.Nullable;
+
+import com.esafirm.imagepicker.adapter.ImageAdapter;
+import com.esafirm.imagepicker.helper.imagegroup.ImageGroupLevel;
+
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
-import java.util.TreeMap;
 
 public class ImageGroup implements Parcelable {
 
-    private final long id;
-    private final String name;
+    private final int position;
+    private final String id;
     private boolean selected = false;
-    private final List<Image> images = new ArrayList<>();
+    private final List<Image> images;
+    private ImageAdapter imageAdapter;
+    private ImageGroupLevel imageGroupLevel = ImageGroupLevel.UNKNOWN;
 
-    public ImageGroup(long id, String name) {
+    public ImageGroup(int position, String id, ImageGroupLevel imageGroupLevel) {
+        this.position = position;
         this.id = id;
-        this.name = name;
+        this.images = new ArrayList<>();
+        this.imageGroupLevel = imageGroupLevel;
+    }
+
+    public void setImages(List<Image> images) {
+        this.images.clear();
+        this.images.addAll(images);
     }
 
     public void addImage(final Image image) {
         this.images.add(image);
     }
 
-    public long getId() {
-        return this.id;
+    public int getPosition() {
+        return position;
     }
 
-    public String getName() {
-        return name;
+    public String getId() {
+        return id;
+    }
+
+    public ImageGroupLevel getImageGroupLevel() {
+        return imageGroupLevel;
     }
 
     public List<Image> getImages() {
@@ -59,15 +68,16 @@ public class ImageGroup implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeLong(this.id);
-        dest.writeString(this.name);
+        dest.writeInt(this.position);
+        dest.writeString(this.id);
         dest.writeList(this.images);
 
     }
 
     protected ImageGroup(Parcel in) {
-        this.id = in.readLong();
-        this.name = in.readString();
+        this.position = in.readInt();
+        this.id = in.readString();
+        this.images = new ArrayList<>();
     }
 
 
@@ -96,40 +106,12 @@ public class ImageGroup implements Parcelable {
         }
     };
 
-    public static class Util {
+    public void setImageAdapter(ImageAdapter imageAdapter) {
+        this.imageAdapter = imageAdapter;
+    }
 
-        private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("M월 dd일 E요일", Locale.KOREA);
-        private static final long EXCLUSION = 24 * 60 * 60 * 1000L;
-
-        public static List<ImageGroup> organizeImages(final List<Image> images) {
-            // descending order by key
-            final Map<Long, ImageGroup> imageGroupMap = new TreeMap<>((o1, o2) -> -(o1.compareTo(o2)));
-
-            for (final Image image : images) {
-                final long key = excludeDayInMilliseconds(image.getDateAdded());
-                final ImageGroup imageGroup = imageGroupMap.get(key);
-                if (imageGroup == null) {
-                    final String groupName = SIMPLE_DATE_FORMAT.format(key);
-                    final ImageGroup newImageGroup = new ImageGroup(key, groupName);
-                    newImageGroup.addImage(image);
-                    imageGroupMap.put(key, newImageGroup);
-                } else {
-                    imageGroup.addImage(image);
-                }
-            }
-
-            // no stream api.. QQ
-            final List<ImageGroup> imageGroups = new ArrayList<>();
-            for (Map.Entry<Long, ImageGroup> elem : imageGroupMap.entrySet()) {
-                imageGroups.add(elem.getValue());
-            }
-
-            return imageGroups;
-        }
-
-        private static long excludeDayInMilliseconds(long time) {
-            return EXCLUSION * (time / EXCLUSION);
-        }
-
+    public @Nullable
+    ImageAdapter getImageAdapter() {
+        return imageAdapter;
     }
 }
