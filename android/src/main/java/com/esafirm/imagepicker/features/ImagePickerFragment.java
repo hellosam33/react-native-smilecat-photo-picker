@@ -617,6 +617,8 @@ public class ImagePickerFragment extends Fragment implements ImagePickerView {
     }
 
     void onTouchEvent(MotionEvent event) {
-        scaleGestureDetector.onTouchEvent(event);
+        if (scaleGestureDetector != null) {
+            scaleGestureDetector.onTouchEvent(event);
+        }
     }
 }

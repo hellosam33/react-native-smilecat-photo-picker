@@ -278,9 +278,9 @@ public class ImagePickerActivity extends AppCompatActivity implements ImagePicke
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        imagePickerFragment.onTouchEvent(ev);
+        if (imagePickerFragment != null) {
+            imagePickerFragment.onTouchEvent(ev);
+        }
         return super.dispatchTouchEvent(ev);
     }
-
-
 }
