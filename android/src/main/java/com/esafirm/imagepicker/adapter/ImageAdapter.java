@@ -19,7 +19,6 @@ import com.esafirm.imagepicker.features.imageloader.ImageType;
 import com.esafirm.imagepicker.listeners.OnImageClickListener;
 import com.esafirm.imagepicker.listeners.OnImageSelectedListener;
 import com.esafirm.imagepicker.model.Image;
-import com.esafirm.imagepicker.model.ImageGroup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +55,7 @@ public class ImageAdapter extends BaseListAdapter<ImageAdapter.ImageViewHolder> 
         final boolean isSelected = isSelected(image);
 
         getImageLoader().loadImage(
-                image.getPath(),
+                image.getImageUri(),
                 viewHolder.imageView,
                 ImageType.GALLERY
         );

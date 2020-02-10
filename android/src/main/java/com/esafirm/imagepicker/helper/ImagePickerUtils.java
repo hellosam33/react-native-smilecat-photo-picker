@@ -76,9 +76,10 @@ public class ImagePickerUtils {
                 Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
     }
 
-    public static boolean isGifFormat(Image image) {
+    public static boolean isAvailableFormat(Image image) {
         String extension = getExtension(image.getPath());
-        return extension.equalsIgnoreCase("gif");
+        return extension.equalsIgnoreCase("png") || extension.equalsIgnoreCase("jpg")
+                || extension.equalsIgnoreCase("jpeg");
     }
 
     public static boolean isVideoFormat(Image image) {

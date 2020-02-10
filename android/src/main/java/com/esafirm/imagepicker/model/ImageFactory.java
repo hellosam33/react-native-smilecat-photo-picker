@@ -9,7 +9,7 @@ public class ImageFactory {
 
     public static List<Image> singleListFromPath(String path) {
         List<Image> images = new ArrayList<>();
-        images.add(new Image(0, ImagePickerUtils.getNameFromFilePath(path), path, 0));
+        images.add(new Image(0, ImagePickerUtils.getNameFromFilePath(path), path, 0, 0, 0));
         return images;
     }
 }

@@ -1,8 +1,9 @@
 package com.esafirm.imagepicker.features;
 
+import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
-import android.media.MediaTimestamp;
+import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
 
@@ -14,11 +15,7 @@ import com.esafirm.imagepicker.model.Folder;
 import com.esafirm.imagepicker.model.Image;
 
 import java.io.File;
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.time.DateTimeException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,8 +35,10 @@ public class ImageFileLoader {
             MediaStore.Images.Media._ID,
             MediaStore.Images.Media.DISPLAY_NAME,
             MediaStore.Images.Media.DATA,
+            MediaStore.Images.Media.WIDTH,
+            MediaStore.Images.Media.HEIGHT,
             MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
-            MediaStore.Images.Media.DATE_TAKEN
+            MediaStore.Images.Media.DATE_TAKEN,
     };
 
     public void loadDeviceImages(final boolean isFolderMode, final boolean includeVideo, final boolean includeAnimation, final ArrayList<File> excludedImages, final ImageLoaderListener listener) {
@@ -88,8 +87,7 @@ public class ImageFileLoader {
                 cursor = context.getContentResolver().query(MediaStore.Files.getContentUri("external"), projection,
                         selection, null, MediaStore.Images.Media.DATE_ADDED);
             } else {
-                cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection,
-                        null, null, MediaStore.Images.Media.DATE_ADDED);
+                cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, null, null, MediaStore.Images.Media.DATE_ADDED);
             }
 
             if (cursor == null) {
@@ -105,20 +103,22 @@ public class ImageFileLoader {
 
             if (cursor.moveToLast()) {
                 do {
-                    long id = cursor.getLong(cursor.getColumnIndex(projection[0]));
-                    String name = cursor.getString(cursor.getColumnIndex(projection[1]));
-                    String path = cursor.getString(cursor.getColumnIndex(projection[2]));
-                    String bucket = cursor.getString(cursor.getColumnIndex(projection[3]));
-                    long dateAdded = cursor.getLong(cursor.getColumnIndex(projection[4]));
+                    final long id = cursor.getLong(cursor.getColumnIndex(projection[0]));
+                    final String name = cursor.getString(cursor.getColumnIndex(projection[1]));
+                    final String path = cursor.getString(cursor.getColumnIndex(projection[2]));
+                    final int width = cursor.getInt(cursor.getColumnIndex(projection[3]));
+                    final int height = cursor.getInt(cursor.getColumnIndex(projection[4]));
+                    final String bucket = cursor.getString(cursor.getColumnIndex(projection[5]));
+                    final long dateAdded = cursor.getLong(cursor.getColumnIndex(projection[6]));
 
                     File file = makeSafeFile(path);
                     if (file != null) {
                         if (exlucedImages != null && exlucedImages.contains(file))
                             continue;
 
-                        Image image = new Image(id, name, path, dateAdded);
+                        Image image = new Image(id, name, path, dateAdded, width, height);
 
-                        if (ImagePickerUtils.isGifFormat(image))
+                        if (!ImagePickerUtils.isAvailableFormat(image))
                             continue;
 
                         temp.add(image);

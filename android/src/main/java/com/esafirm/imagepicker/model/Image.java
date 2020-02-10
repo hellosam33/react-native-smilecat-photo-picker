@@ -1,7 +1,10 @@
 package com.esafirm.imagepicker.model;
 
+import android.content.ContentUris;
+import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.provider.MediaStore;
 
 public class Image implements Parcelable {
 
@@ -9,12 +12,24 @@ public class Image implements Parcelable {
     private String name;
     private String path;
     private long dateAdded;
+    private int width;
+    private int height;
 
-    public Image(long id, String name, String path, long dateAdded) {
+    public Image(long id, String name, String path, long dateAdded, int width, int height) {
         this.id = id;
         this.name = name;
         this.path = path;
         this.dateAdded = dateAdded;
+        this.width = width;
+        this.height = height;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
     }
 
     public long getId() {
@@ -69,6 +84,8 @@ public class Image implements Parcelable {
         dest.writeString(this.name);
         dest.writeString(this.path);
         dest.writeLong(this.dateAdded);
+        dest.writeInt(this.width);
+        dest.writeInt(this.height);
     }
 
     protected Image(Parcel in) {
@@ -76,6 +93,8 @@ public class Image implements Parcelable {
         this.name = in.readString();
         this.path = in.readString();
         this.dateAdded = in.readLong();
+        this.width = in.readInt();
+        this.height = in.readInt();
     }
 
     public static final Creator<Image> CREATOR = new Creator<Image>() {
@@ -89,4 +108,8 @@ public class Image implements Parcelable {
             return new Image[size];
         }
     };
+
+    public Uri getImageUri() {
+        return ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+    }
 }
